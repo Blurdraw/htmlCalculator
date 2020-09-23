@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>计算器</title>
+	<style>
+body{
+	margin: 0px;
+	padding: 0px;
+	user-select: none;
+	overflow: hidden;
+	font-family: "arial";
+}
+div.advpanel{
+	width: 100%;
+	transition: all .7s ;/* cubic-bezier(0,.96,.2,.95) */
+	top:100vh;
+	position:absolute ;
+	background-color: #FFFFFF;
+	height: calc(69px * 5);
+	overflow-y:scroll;
+	z-index: 1;
+}
+
+div.history{
+	transition: all 1s;
+	background-color: white;
+	font-size: 1rem;
+}
+div.history:hover{
+	background: ghostwhite;
+}
+div.row{
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content:space-between;
+}
+div.showres{
+	overflow:scroll;
+	white-space:normal;
+    word-break:break-all;
+    word-wrap:break-word; 
+	margin: 0px;
+	display: block;
+	width: 100%;
+	height: 100%;
+	font-size: 2rem;
+	padding: 0px  0px;
+	flex:1;
+	height:-moz-calc(100vh - 69px * 5);
+	height:-webkit-calc(100vh - 69px * 5);
+	height: calc(100vh - 69px * 5);
+	text-align: left;
+	
+}
+div.button{
+	font-weight:lighter;
+	text-align: center;
+	margin: 0 0px;
+	padding: 25px 10px;
+	background-color:#f9f9f9;
+	flex:1;
+}
+.whitesmoke{
+	background-color: whitesmoke !important;
+}
+.button:hover{
+	animation: click 0.4s;
+}
+@keyframes click
+{
+  0% {background: #f9f9f9;}
+ 10% {background: darkgrey;color:white;transform:scale(0.8,0.8);}
+100% {background: #f9f9f9;transform:scale(1,1);}
+}
+
+
+</style>
+</head>	
+	<body   onmousemove=/HideMenu()/ oncontextmenu="return false" ondragstart="return false" onselectstart ="return false" onselect="document.selection.empty()" oncopy="document.selection.empty()" onbeforecopy="return false" onmouseup="document.selection.empty()">
+		<div class="showres" id="showBox"></div>
+	<div class="col">
+		<div id="" class="row">
+			<div id="" class="button" onclick="advpanel('show')">More	</div>
+			<div id="" class="button" onclick="Calculator.clear()">C	</div>
+			<div id="" class="button" onclick="Calculator.del()">DEL</div>
+			<div id="" class="button" onclick="Calculator.input('(')">(</div>
+			<div id="" class="button" onclick="Calculator.input(')')">)</div>
+		</div>
+		<div id="" class="row">
+			<div id="" class="button" onclick="Calculator.input(1)">1	</div>
+			<div id="" class="button" onclick="Calculator.input(2)">2	</div>
+			<div id="" class="button" onclick="Calculator.input(3)">3	</div>
+			<div id="" class="button" onclick="Calculator.input('+')">+	</div>
+		</div>
+		<div id="" class="row">
+			<div id="" class="button" onclick="Calculator.input(4)">4	</div>
+			<div id="" class="button" onclick="Calculator.input(5)">5	</div>
+			<div id="" class="button" onclick="Calculator.input(6)">6	</div>
+			<div id="" class="button" onclick="Calculator.input('-')">-	</div>
+		</div>
+		<div id="" class="row">
+			<div id="" class="button" onclick="Calculator.input(7)">7	</div>
+			<div id="" class="button" onclick="Calculator.input(8)">8	</div>
+			<div id="" class="button" onclick="Calculator.input(9)">9	</div>
+			<div id="" class="button" onclick="Calculator.input('*')">x	</div>
+		</div>
+		<div id="" class="row">
+			<div id="" class="button" onclick="Calculator.input('.')">.	</div>
+			<div id="" class="button" onclick="Calculator.input(0)">0	</div>
+			<div id="" class="button" onclick="Calculator.cal()">=	</div>
+			<div id="" class="button" onclick="Calculator.input('/')">/	</div>
+		</div>
+	</div>
+	<div class="advpanel" id='advp'>
+		<div id="" class="row">
+			<div id="" class="button" onclick="advpanel('hide')" style="position: fixed;width: 100%;background-color: #F1F1F1;">Hide</div>
+		</div>
+		<div id="" class="row" style="margin-top: 69px;">
+			<div id="" class="button" onclick="Calculator.input('sin')">sin</div>
+			<div id="" class="button" onclick="Calculator.input('cos')">cos</div>
+			<div id="" class="button" onclick="Calculator.input('tan')">tan</div>
+			<div id="" class="button" onclick="Calculator.input('ln')">ln</div>
+			
+		</div>
+		<div id="" class="row" >
+			<div id="" class="button" onclick="Calculator.input('^')">^</div>
+			<div id="" class="button" onclick="Calculator.input('^0.5')">^0.5</div>
+			
+		</div>
+			
+		<br>
+		<br>
+		<center><font size="3">欢迎!更多功能，正在开发中...<br>版本 1.1.1 beta<br>420783502@qq.com</font></center>
+		
+	</div>
+    <script type="text/javascript" >
+var Dom = {
+	showBox:document.getElementById('showBox'),
+	advpanel:document.getElementById('advp')
+}
+//中缀表达式栈
+expStack = {
+	_exp:new Array(),
+	pushin:function(i){
+		this._exp.push(i)
+		
+	},
+	shiftout:function(){
+		return this._exp.shift()
+		
+	},
+	get len(){
+		return this._exp.length
+	},
+	get exp(){
+		return this._exp.toString()
+	},
+	init:function(){
+		this._exp.splice(0,this._exp.length);
+	}
+}
+// 借助栈转换后缀表达式
+Stack = {
+	_expstack:new Array(),
+	push:function(i){
+		this._expstack.push(i)
+	},
+	pop:function(){
+		return this._expstack.pop
+	},
+	init:function(){
+		this._expstack.splice(0,this._expstack.length);
+	}
+}
+var Calculator = {
+	_exp:'',
+	set exp(v){
+		this._exp = v
+		this.showBoxControl.write(this._exp)
+		//Dom.showBox.innerHTML = v
+	},
+	get exp(){
+		return this._exp
+	},
+	_history:'',
+	// wirte只更新表达式    update 将表达式和结果推入历史纪录
+	showBoxControl:{
+		updata:function(r){
+			if(Calculator._history != '')
+				Calculator._history =  Calculator.exp +'<br> =' + r +'<br><br>' + Calculator._history
+			else
+				Calculator._history = Calculator.exp + '<br>='+ r
+			Dom.showBox.innerHTML = r + '<br><div class=history>' + Calculator._history +'</div>'
+		},
+		write:function(exp){
+			Dom.showBox.innerHTML = exp + '<br><div class=history>'+ Calculator._history+'</div> ' 
+		}
+	},
+	error:function(e){
+		alert('发生错误： ' + e)
+	},
+	//返回是否为操作符 是true
+	isop:function(x){
+		op='+-*/^'
+		let i = op.indexOf(x)
+		if(i==-1)
+			return false;
+		return true
+	},
+	isbracket:function(x){
+		op='()'
+		let i = op.indexOf(x)
+		if(i==-1)
+			return false;
+		return true
+	},
+	issingleop:function(x){
+		for(let i=0;i<this.singleop.length;i++){
+			if(x==this.singleop[i]) return true
+		}
+		return false;	
+	},
+	lastinput:'',
+	input:function(i){
+		let len = this.exp.length
+		if(len == 0)
+			this.lastinput = ''
+		else
+			this.lastinput = this.exp[len - 1]
+
+		if(this.lastinput != '' ){
+			if(this.isop(this.lastinput) && this.isop(i))
+				this.del()
+		}
+		else{
+			if(i=='*' || i=='/')
+				return false
+		}
+		
+		if((i == '(' || this.issingleop(i)) && ('0'<= this.lastinput && this.lastinput<= '9')){
+			i = '*' + i
+		}
+		if(this.lastinput == ')' && typeof(i)=='number'){
+			i = '*' + i
+		}
+		
+		
+		if((this.exp.length == 0 || this.lastinput == '(') && this.isop(i) ){
+			 i = '0' + i
+		}
+			
+		//this.exp = Dom.showBox.innerHTML + i
+		this.exp = this.exp + i
+	},
+	clear:function(){
+		this.exp = ''
+	},
+	del:function(){
+		let str = this.exp.slice(0,this.exp.length-1)
+		this.exp = str
+	},
+	/*
+	createInfixExp 函数   
+	将字符串转换为中序表达式队列，用于建立表达式二叉树或者后缀表达式
+	此函数应该在输入完成后调用
+	*/
+	createInfixExp:function(){
+		expStack.init()
+		let exparray = this.exp
+		let item=''
+		if(this.isop(exparray[0])){ //操作前面添0 函数不用
+			exparray.unshift('0');
+		}
+		for(let i = 0;true;i++){
+			if(this.isop(exparray[i]) || exparray[i] == '(' || exparray[i] == ')'){
+				if(item != ''){
+					expStack.pushin(parseFloat(item))
+					item = ''
+				}										
+				expStack.pushin(exparray[i])			
+			}
+			else{
+				//是数字 和小数点
+				if(('0' <= exparray[i] && exparray[i] <= '9') || exparray[i] == '.'){
+					item = item + exparray[i]
+				}
+				//匹配函数(是字符串)
+				else{
+					for(let j = 0;j<this.singleop.length;j++){
+						let len = this.singleop[j].length
+						if(this.singleop[j] == exparray.slice(i,i+len)){
+							if(item != ''){//item是数字就推入
+								expStack.pushin(parseFloat(item))
+								item = ''
+							}
+							expStack.pushin(this.singleop[j])
+							i=i+len-1
+							//item = exparray[i]
+						}
+					}				
+				}
+			}
+			if(i+1 == exparray.length){
+				if(item != '')
+					expStack.pushin(parseFloat(item))  
+				break
+			}	
+		}
+	},
+	singleop:['sin','cos','tan','cot','ln'],//添加了这里还要改 signdict
+	signdict:{
+		'+':'0',
+		'-':'0',
+		'*':'1',
+		'/':'1',
+		'^':'2',
+		'sin':'8',
+		'cos':'8',
+		'tan':'8',
+		'cot':'8',
+		'ln':'8',
+		'(':'9',
+		')':'9'
+	},
+	createSuffixExp:function(){
+		let signstack = new Array()
+		let sufexp = new Array()
+		
+		for(let i=0;expStack.len;i++){
+			let item = expStack.shiftout()
+			if(typeof(item) == 'number'){
+				sufexp.push(item)
+			}
+			else{
+				if(signstack.length==0){
+					signstack.push(item)
+					continue
+				}
+				//与前一个比较，小于前一个的优先级 注意先进入也优先，前一个弹出 
+				if(this.signdict[item] <= this.signdict[signstack.slice(-1)]){
+					if(signstack.slice(-1) != '('){
+						sufexp.push(signstack.pop())
+						signstack.push(item)
+					}
+					else{
+						if(item == ')') signstack.pop() //弹出（）
+						else signstack.push(item)
+					}	
+				}
+				else { //   ）前面不是（的情况
+					if(item == ')'){
+						while(true){
+							let x = signstack.pop()
+							if(x != '(')
+								sufexp.push(x)
+							else break;
+						}
+					}
+					else  signstack.push(item)
+				}						
+			}
+		}
+		while(signstack.length){
+			sufexp.push(signstack.pop())
+		}
+		return sufexp
+	},
+	op:function(a,o,b){
+		if(a == undefined) a=0
+		switch (o){
+			case '+':return a+b;
+			case '-':return a-b;
+			case '*':return a*b;
+			case '/':if(b==0)this.error('除0错误');else return a/b;
+			case '^':return Math.pow(a,b);
+			case 'sin':return Math.sin(a);
+			case 'cos':return Math.cos(a);
+			case 'tan':return Math.tan(a);
+			case 'cot':return Math.cot(a);
+			case 'ln':return Math.log(a);
+		} 
+	},
+	cal:function(){
+		let calstack = new Array()
+		this.createInfixExp()
+		//console.log(expStack._exp.toString())
+		let sufexp = this.createSuffixExp()
+		//console.log(sufexp)
+		while(sufexp.length){
+			let i = sufexp.shift()
+			if(typeof(i) == 'number'){
+				calstack.push(i)
+			}
+			else{
+				if(this.issingleop(i)){
+					let a = calstack.pop()
+					let b = 0
+					calstack.push(this.op(a,i,b))
+				}
+				else{
+					let b = calstack.pop()
+					let a = calstack.pop()
+					calstack.push(this.op(a,i,b))
+				}			
+			}
+		}
+		let re = calstack.pop()
+		this.showBoxControl.updata(re)
+		this.exp = ''
+	}
+}
+function advpanel(c){
+	switch (c){
+		case 'hide' : Dom.advpanel.style.top='100vh';Dom.advpanel.style.transform='scale(0.1,0.9)';break
+		case 'show' : Dom.advpanel.style.top='calc(100vh - 69px * 5)' ;Dom.advpanel.style.transform='scale(1,1)';break
+	}
+}
+	</script>    	
+</body>
+</html>
